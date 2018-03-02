@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html class="sl-root decks export loaded ua-phantomjs reveal-viewport theme-font-montserrat theme-color-black-orange">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <meta name="author" content="Mateusz Szostok">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Errors in Go - let's do it right</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+
+<body>
+
+<div class="reveal">
+    <div class="slides">
+
+        <!-- TITLE -->
+        <section class="stack">
+            <section>
+                <div class="sl-block" style="width: 889px; left: 32px; top: 287px; height: auto;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h1>Errors in Go - let's do it</h1>
+                    </div>
+                </div>
+                <div class="sl-block"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 180px; top: 384px;">
+                    <div class="sl-block-content" style="z-index: 12; color: rgb(255, 153, 0);">
+                        <h1>right</h1>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="image"
+                     style="width: 938px; height: 137px; left: 11px; top: 241px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647069/Screen_Shot_2018-02-26_at_19.55.17.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 600px; left: 20px; top: 671px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <p><span style="font-size:0.5em">source: https://commandcenter.blogspot.com/2017/12/error-handling-in-upspin.html</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 216px; left: 735px; top: 392px;">
+                    <div class="sl-block-content" style="z-index: 13;">
+                        <p><em>by Rob Pike</em></p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="width: 889px; left: 32px; top: 287px; height: auto;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h1>Errors in Go - let's do it</h1>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 600px; left: 180px; top: 384px;">
+                    <div class="sl-block-content" style="z-index: 12; color: rgb(255, 153, 0);">
+                        <h1>right</h1>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 460px; left: 499px; top: 517px;">
+                    <div class="sl-block-style" style="z-index: 13; transform: rotate(360deg);">
+                        <div class="sl-block-content" style="z-index: 13;">
+                            <h1><em><span style="font-size:0.7em">...in some cases</span></em></h1>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+        <!-- / TITLE -->
+
+        <!-- AGENDA -->
+        <section>
+            <div class="sl-block" data-block-type="text" style="width: 806px; left: 74px; top: 42px; height: auto;">
+                <div class="sl-block-content" style="z-index: 11;">
+                    <h2 style="text-align: left;">Agenda</h2>
+                </div>
+            </div>
+            <div class="sl-block" data-block-type="text" style="width: 427px; left: 80px; top: 173px; height: auto;">
+                <div class="sl-block-content" style="z-index: 12;">
+                    <ul>
+                        <li>
+                            <p>Panic like a Gopher</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="sl-block" data-block-type="text"
+                 style="height: auto; min-width: 30px; min-height: 30px; width: 506px; left: 0px; top: 449px;">
+                <div class="sl-block-content" style="z-index: 13;">
+                    <ul>
+                        <li><span style="color:rgb(255, 255, 255); text-align:left">Error context</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="sl-block" data-block-type="text"
+                 style="height: auto; min-width: 30px; min-height: 30px; width: 565px; left: 22px; top: 240px;">
+                <div class="sl-block-content" style="z-index: 14;">
+                    <ul style="color:rgb(255, 255, 255)">
+                        <li style="color: rgb(255, 255, 255); text-align: left;">Error Strategies
+                            <ul>
+                                <li>
+                                    <p>Sentinel errors</p>
+                                </li>
+                                <li>
+                                    <p>Typed errors</p>
+                                </li>
+                                <li>
+                                    <p>Behaviour errors</p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <!-- / AGENDA -->
+
+        <!-- PANIC LIKE A GOPHER -->
+        <section class="stack">
+            <section>
+                <div class="sl-block" data-block-type="text" style="width: 806px; left: 77px; top: 24px; height: auto;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h1>Panic like a Gopher</h1>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 947px; height: 571px; left: 7px; top: 117px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647285/carbon__3_.png">
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="width: 806px; left: 77px; top: 24px; height: auto;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h1>Panic like a Gopher</h1>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 850px; height: 471px; left: 55px; top: 62px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647412/carbon__4_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 634px; height: 239px; left: 163px; top: 481px;">
+                    <div class="sl-block-content" style="z-index: 13;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647416/Screen_Shot_2018-02-26_at_21.39.27.png">
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="width: 806px; left: 77px; top: 24px; height: auto;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h1>Panic like a Gopher</h1>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 806px; height: 613px; left: 78px; top: 65px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647428/carbon__5_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 806px; height: 49px; left: 80px; top: 648px;">
+                    <div class="sl-block-content" style="z-index: 13;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647429/Screen_Shot_2018-02-26_at_21.42.34.png">
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="width: 806px; left: 77px; top: 24px; height: auto;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <h1>Panic like a Gopher</h1>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="width: 954px; height: 575px; left: 6px; top: 90px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647285/carbon__3_.png">
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 600px; left: 180px; top: 44px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h2>Gophers does not panic!</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 518px; height: 399px; left: 254px; top: 257px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="http://fat.gfycat.com/LazyPlayfulHart.gif">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 200px; top: 252px;">
+                    <div class="sl-block-content" style="z-index: 13; border-width: 1px;">
+                        <h3>GOPHERS HANDLES</h3>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 224px; top: 606px;">
+                    <div class="sl-block-content" style="z-index: 14;">
+                        <h3 style="color:rgb(255, 255, 255)">ERRORS GRACEFULLY</h3>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 180px; top: 35px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h2>Errors - Go approach</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 947px; height: 322px; left: 10px; top: 182px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4648040/carbon__10_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 808px; left: 80px; top: 328px;">
+                    <div class="sl-block-content" style="z-index: 13; font-size: 102%;">
+                        <pre><span style="font-size:0.7em"><span style="color:#569cd6">func</span> (c *Client) <span
+                                style="color:#dcdcaa">Get</span>(url <span style="color:#4ec9b0">string</span>) (resp *Response, err <span
+                                style="color:#569cd6">error</span>)</span></pre>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 780px; left: 90px; top: 531px;">
+                    <div class="sl-block-content" style="z-index: 14;">
+                        <p>It is idiomatic in Go to use the error interface type as the return type for any error that
+                            is going to be returned from a function or method.</p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="image"
+                     style="width: 899px; height: 581px; left: 17px; top: 54px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647615/carbon__7_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 600px; left: 180px; top: 35px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h2>Errors - Go approach</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 706px; left: 93px; top: 576px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <ul>
+                            <li style="text-align:justify"><span style="font-size:0.9em">Deal with errors first!</span>
+                            </li>
+                            <li style="text-align:justify"><span style="font-size:0.9em"><span
+                                    style="color:rgb(255, 255, 255)">Multiple return statements</span></span></li>
+                            <li style="text-align:justify"><span style="font-size:0.9em"><span
+                                    style="color:rgb(255, 255, 255)">Keep the normal code path at a minimal indentation </span></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 855px; left: 53px; top: 35px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h2>Panic function - pattern</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 1014px; height: 450px; left: -26px; top: 144px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647636/carbon__8_.png">
+                    </div>
+                </div>
+            </section>
+        </section>
+        <!-- / PANIC LIKE A GOPHER -->
+
+
+        <section>
+            <div class="sl-block" data-block-type="text"
+                 style="height: auto; min-width: 30px; min-height: 30px; width: 960px; left: 0px; top: 432px;">
+                <div class="sl-block-content" style="z-index: 10;">
+                    <blockquote>
+                        <h2>
+                            <em>(..)</em><span style="font-size:0.9em">Errors are just values and can be programmed in different ways to suit different situations"</span>
+                        </h2>
+                    </blockquote>
+                </div>
+            </div>
+            <div class="sl-block" data-block-type="text"
+                 style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 180px; top: 24px;">
+                <div class="sl-block-content" style="z-index: 11;">
+                    <h2>Idomatic GO</h2>
+                </div>
+            </div>
+            <div class="sl-block" data-block-type="image"
+                 style="min-width: 30px; min-height: 30px; width: 915px; height: 311px; left: 10px; top: 107px;">
+                <div class="sl-block-content" style="z-index: 13;">
+                    <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4648040/carbon__10_.png">
+                </div>
+            </div>
+            <div class="sl-block" data-block-type="text"
+                 style="height: auto; min-width: 30px; min-height: 30px; width: 819px; left: 61px; top: 245px;">
+                <div class="sl-block-content" style="z-index: 14; font-size: 106%;">
+                    <pre><span style="font-size:0.7em"><span style="color:#569cd6">func</span> (c *Client) <span
+                            style="color:#dcdcaa">Get</span>(url <span style="color:#4ec9b0">string</span>) (resp *Response, err <span
+                            style="color:#569cd6">error</span>)</span></pre>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="sl-block" data-block-type="text"
+                 style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 180px; top: 263px;">
+                <div class="sl-block-content" style="z-index: 11;">
+                    <h1>Return Error Strategies</h1>
+                </div>
+            </div>
+        </section>
+
+        <!-- SENTINEL ERRORS -->
+        <section class="stack">
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 218px; top: 35px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h2>Sentinel errors</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 919px; left: 70px; top: 264px;">
+                    <div class="sl-block-content" style="z-index: 12; font-size: 89%;">
+<pre><span style="font-size:0.7em"><span style="color:#608b4e">//http://golang.org/src/pkg/bufio/bufio.go</span>
+<span style="color:#569cd6">var</span> (
+<span style="color:#9cdcfe">   ErrInvalidUnreadByte</span> = errors.<span style="color:#dcdcaa">New</span>(<span
+            style="color:#ce9178">"bufio: invalid use of UnreadByte"</span>)
+<span style="color:#9cdcfe">   ErrInvalidUnreadRune</span> = errors.<span style="color:#dcdcaa">New</span>(<span
+            style="color:#ce9178">"bufio: invalid use of UnreadRune"</span>)
+<span style="color:#9cdcfe">   ErrBufferFull</span>        = errors.<span style="color:#dcdcaa">New</span>(<span
+            style="color:#ce9178">"bufio: buffer full"</span>)
+<span style="color:#9cdcfe">   ErrNegativeCount</span>     = errors.<span style="color:#dcdcaa">New</span>(<span
+            style="color:#ce9178">"bufio: negative count"</span>)
+)</span></pre>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 960px; height: 616px; left: 0px; top: 91px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 600px; left: 216px; top: 35px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h2>Sentinel errors</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 696px; left: 98px; top: 185px;">
+                    <div class="sl-block-content" style="z-index: 12; font-size: 97%;">
+<pre><span style="font-size:0.7em"><span style="color:#569cd6">func</span> (m *meteredExpirator) <span
+        style="color:#dcdcaa">collectMetric</span>() {
+    <span style="color:#608b4e">// ...</span>
+<span style="color:#9cdcfe">    err</span> := m.underlying.<span style="color:#dcdcaa">Expire</span>(ctx, maxTime)
+<span style="color:#c586c0">    switch</span> err {
+<span style="color:#c586c0">    case</span> <span style="color:#569cd6">nil</span>:
+        m.expirationSuccessRemoved.<span style="color:#dcdcaa">Inc</span>(<span style="color:#b5cea8">1</span>)
+<span style="color:#c586c0">    case</span> ErrNothingToExpire:
+        m.expirationSuccessEmpty.<span style="color:#dcdcaa">Inc</span>(<span style="color:#b5cea8">1</span>)
+<span style="color:#c586c0">    default</span>:
+         m.expirationFailed.<span style="color:#dcdcaa">Inc</span>(<span style="color:#b5cea8">1</span>)
+    }
+    <span style="color:#608b4e">// ...</span>
+}</span></pre>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="width: 981px; height: 630px; left: -21px; top: 72px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 927px; left: 0px; top: 47px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <h3>Props and cons of using sentinel errors</h3>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 120px; top: 177px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <p style="text-align: left;"><strong>props</strong></p>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 372px; left: 168px; top: 262px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <ul>
+                            <li>fast &amp; simple do define</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 120px; top: 360px;">
+                    <div class="sl-block-content" style="z-index: 14;">
+                        <p style="text-align:left"><strong>cons</strong></p>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 720px; left: 150px; top: 427px;">
+                    <div class="sl-block-content" style="z-index: 15;">
+                        <ul>
+                            <li>error value  becomes a part of your public API</li>
+                            <li>cannot add more context to error in feature</li>
+                            <li>creates dependencies between packages</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </section>
+        <!-- / SENTINEL ERRORS -->
+
+        <!-- Error types -->
+        <section class="stack">
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 218px; top: 35px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <h2>Error types</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 851px; left: 66px; top: 209px;">
+                    <div class="sl-block-content" style="z-index: 13; font-size: 59%;">
+<pre><span style="font-size:0.9em"><span style="color:#608b4e">// https://golang.org/pkg/os/#PathError</span>
+
+
+<span style="color:#608b4e">// PathError records an error and the operation and file path that caused it.</span>
+<span style="color:#569cd6">type</span> <span style="color:#4ec9b0">PathError</span> <span
+            style="color:#569cd6">struct</span> {
+    Op   <span style="color:#4ec9b0">string</span>
+    Path <span style="color:#4ec9b0">string</span>
+    Err  <span style="color:#569cd6">error</span>
+}
+
+
+
+<span style="color:#569cd6">func</span> (e *PathError) <span style="color:#dcdcaa">Error</span>() <span
+            style="color:#4ec9b0">string</span> { <span style="color:#c586c0">return</span> e.Op + <span
+            style="color:#ce9178">" "</span> + e.Path + <span style="color:#ce9178">": "</span> + e.Err.<span
+            style="color:#dcdcaa">Error</span>() }</span></pre>
+
+                        <p> </p>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 952px; height: 611px; left: 4px; top: 55px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 180px; top: 590px;">
+                    <div class="sl-block-content" style="z-index: 15;">
+                        <p>Sometimes the caller needs extra context in order to make a more informed error handling
+                            decision.</p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 600px; left: 216px; top: 35px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h2>Error types</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 851px; left: 80px; top: 160px;">
+                    <div class="sl-block-content" style="z-index: 12; font-size: 71%;" dir="ui">
+<pre><span style="font-size:0.9em">
+
+<span style="color:#9cdcfe">err</span> := <span style="color:#dcdcaa">something</span>()
+
+<span style="color:#c586c0">switch</span> <span style="color:#9cdcfe">e</span> := err.(type) {
+<span style="color:#c586c0">case</span> <span style="color:#569cd6">nil</span>:
+    <span style="color:#608b4e">// success</span>
+<span style="color:#c586c0">case</span> *os.PathError:</span>
+    log.<span style="color:#dcdcaa">Printf</span>(<span
+            style="color:#ce9178">"while executing something, got err: %v"</span>, e)
+    <span style="color:#c586c0">if</span> e.Op == <span style="color:#ce9178">"mkdir"</span> {
+        <span style="color:#608b4e">// drop custom metric</span>
+    } <span style="color:#c586c0">else</span> {
+        <span style="color:#608b4e">// drop custom metric</span>
+    }</pre>
+
+                        <pre><span style="font-size:0.9em"><span style="color:#c586c0">default</span>:
+    <span style="color:#608b4e">// unknown error</span>
+}
+
+</span></pre>
+
+                        <p> </p>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="width: 960px; height: 616px; left: 0px; top: 72px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 619px; left: 21px; top: 47px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <h3>Props of using error types</h3>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 600px; left: 119px; top: 218px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <p style="text-align: left;"><strong>props</strong></p>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 744px; left: 149px; top: 281px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <ul>
+                            <li>more context about an error</li>
+                            <li>easy to extend in feature without breaking API</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </section>
+        </section>
+        <!-- / Error types-->
+
+        <!-- Assert errors for behaviour, not type -->
+        <section class="stack">
+            <section>
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 741px; left: 21px; top: 49px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h3>Assert errors for behaviour, not type</h3>
+                    </div>
+                </div>
+
+
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 808px; left: 80px; top: 303px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <blockquote>
+                            <p><span style="text-align:start">Interactions with the world outside your process, like network activity, require that the caller investigate the nature of the error to decide if it is reasonable to retry the operation."</span>
+                            </p>
+                        </blockquote>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 741px; left: 21px; top: 49px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <h3>Assert errors for behaviour, not type</h3>
+                    </div>
+                </div>
+
+
+                <div class="sl-block" data-block-type="image"
+                     style="width: 960px; height: 616px; left: 0px; top: 89px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 825px; left: 84px; top: 211px;">
+                    <div class="sl-block-content" style="z-index: 12; font-size: 64%;">
+<pre><span style="font-size:0.9em"><span style="color:#608b4e">// DNSError represents a DNS lookup error.</span>
+<span style="color:#569cd6">type</span> <span style="color:#4ec9b0">DNSError</span> <span
+            style="color:#569cd6">struct</span> {
+    Err         <span style="color:#4ec9b0">string</span> <span style="color:#608b4e">// description of the error</span>
+    Name        <span style="color:#4ec9b0">string</span> <span style="color:#608b4e">// name looked for</span>
+    Server      <span style="color:#4ec9b0">string</span> <span style="color:#608b4e">// server used</span>
+    IsTimeout   <span style="color:#4ec9b0">bool</span>   <span style="color:#608b4e">// if true, timed out; not all timeouts set this</span>
+    IsTemporary <span style="color:#4ec9b0">bool</span>   <span style="color:#608b4e">// if true, error is temporary; not all errors set this</span>
+}
+
+<span style="color:#569cd6">func</span> (e *DNSError) <span style="color:#dcdcaa">Error</span>() <span
+            style="color:#4ec9b0">string</span> {
+<span style="color:#608b4e">// ...</span>
+}
+
+<span style="color:#608b4e">// Temporary reports whether the DNS error is known to be temporary.</span>
+<span style="color:#608b4e">// This is not always known; a DNS lookup may fail due to a temporary</span>
+<span style="color:#608b4e">// error and return a DNSError for which Temporary returns false.</span>
+<span style="color:#569cd6">func</span> (e *DNSError) <span style="color:#dcdcaa">Temporary</span>() <span
+            style="color:#4ec9b0">bool</span> { <span style="color:#c586c0">return</span> e.IsTimeout || e.IsTemporary }
+
+</span></pre>
+
+                        <p> </p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 741px; left: 21px; top: 49px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <h3>Assert errors for behaviour, not type</h3>
+                    </div>
+                </div>
+
+
+                <div class="sl-block" data-block-type="image"
+                     style="width: 963px; height: 618px; left: 0px; top: 102px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 849px; left: 69px; top: 250px;">
+                    <div class="sl-block-content" style="z-index: 12; font-size: 69%;">
+<pre><span style="color:#9cdcfe">err</span> := c.<span style="color:#dcdcaa">processItem</span>(key.(<span
+        style="color:#4ec9b0">string</span>))
+
+<span style="color:#c586c0">switch</span> {
+<span style="color:#c586c0">case</span> err == <span style="color:#569cd6">nil</span>:
+    c.queue.<span style="color:#dcdcaa">Forget</span>(key)
+
+<span style="color:#c586c0">case</span> I<span style="color:#dcdcaa">sTemporaryError</span>(err):
+    c.log.<span style="color:#dcdcaa">Errorf</span>(<span
+            style="color:#ce9178">"Error processing %q (will retry): %v"</span>, key, err)
+    c.queue.<span style="color:#dcdcaa">AddRateLimited</span>(key)
+
+<span style="color:#c586c0">default</span>:
+    c.log.<span style="color:#dcdcaa">Errorf</span>(<span
+            style="color:#ce9178">"Error processing %q (giving up): %v"</span>, key, err)
+    c.queue.<span style="color:#dcdcaa">Forget</span>(key)
+}
+
+</pre>
+
+                        <p> </p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 741px; left: 21px; top: 49px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h3>Assert errors for behaviour, not type</h3>
+                    </div>
+                </div>
+
+
+                <div class="sl-block" data-block-type="image" style=" min-width: 30px; min-height: 30px; width: 960px; height: 616px; left: 0px; top: 92px;
+                ">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text" style=" height: auto; min-width: 30px; min-height: 30px; width: 886px; left: 62px; top: 208px;
+    ">
+                    <div class="sl-block-content" style="z-index: 13; font-size: 73%;">
+<pre><span style="font-size:0.9em">
+
+<span style="color:#608b4e">// IsTemporaryError returns true if error implements following interface:</span>
+<span style="color:#608b4e">//  type temporary interface {</span>
+<span style="color:#608b4e">//      Temporary() bool</span>
+<span style="color:#608b4e">//  }</span>
+<span style="color:#608b4e">//</span>
+<span style="color:#608b4e">// and Temporary() method return true. Otherwise false will be returned.</span>
+<span style="color:#569cd6">func</span> <span style="color:#dcdcaa">IsTemporaryError</span>(err <span
+        style="color:#569cd6">error</span>) <span style="color:#4ec9b0">bool</span> {
+    <span style="color:#569cd6">type</span> <span style="color:#4ec9b0">temporary</span> <span style="color:#569cd6">interface</span> {
+        <span style="color:#dcdcaa">Temporary</span>() <span style="color:#4ec9b0">bool</span>
+    }
+
+    <span style="color:#9cdcfe">te</span>, <span style="color:#9cdcfe">ok</span> := err.(temporary)
+    <span style="color:#c586c0">return</span> ok &amp;&amp; te.<span style="color:#dcdcaa">Temporary</span>()
+}</span></pre>
+
+                        <p> </p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 741px; left: 21px; top: 49px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <h3>Assert errors for behaviour, not type</h3>
+                    </div>
+                </div>
+
+
+                <div class="sl-block" data-block-type="image"
+                     style="width: 984px; height: 632px; left: 0px; top: 97px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text" style=" height: auto; min-width: 30px; min-height: 30px; width: 953px; left: 58px; top: 245px;
+    ">
+                    <div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text"
+                         style="z-index: 14; font-size: 203%;">
+<pre style="color:rgb(255, 255, 255); font-size:17.1px"><span style="font-size:1.2em"><span
+        style="color:rgb(156, 220, 254)">err</span> := svc.instanceInserter.<span style="color:rgb(220, 220, 170)">Insert</span>(...)
+
+<span style="color:rgb(197, 134, 192)">switch</span> {
+<span style="color:rgb(197, 134, 192)">case</span> err == <span style="color:rgb(86, 156, 214)">nil</span>:
+    <span style="color:rgb(96, 139, 78)">// 202 Accepted</span>
+</span></pre>
+
+                        <pre style="color:rgb(255, 255, 255); font-size:15.3px"><span style="font-size:1.2em"><span
+                                style="color:rgb(197, 134, 192)">case</span> <span style="color:rgb(220, 220, 170)">IsActiveOperationInProgressError</span>(err):
+    <span style="color:rgb(96, 139, 78)">// provisioning in progress: 202 Accepted</span>
+<span style="color:rgb(197, 134, 192)">case</span> <span style="color:rgb(220, 220, 170)">IsAlreadyExistsError</span>(err):
+    <span style="color:rgb(96, 139, 78)">// all filed are the same: 200 OK</span>
+    <span style="color:rgb(96, 139, 78)">// same ID different fields: 409 Conflict</span>
+<span style="color:rgb(197, 134, 192)">default</span>:
+    <span style="color:rgb(96, 139, 78)">// 400 Bad Request</span>
+    <span style="color:rgb(197, 134, 192)">return</span> fmt.<span style="color:rgb(220, 220, 170)">Errorf</span>(<span
+                                    style="color:rgb(206, 145, 120)">"cannot schedule instance to provision: %s"</span>, err.<span
+                                    style="color:rgb(220, 220, 170)">Error</span>())
+}</span></pre>
+
+                        <p> </p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 741px; left: 21px; top: 49px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <h3>Assert errors for behaviour, not type</h3>
+                    </div>
+                </div>
+
+
+                <div class="sl-block" data-block-type="image"
+                     style="width: 989px; height: 635px; left: -11px; top: 74px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 760px; left: 80px; top: 195px;">
+                    <div class="sl-block-content" style="z-index: 12; font-size: 68%;">
+<pre><span style="font-size:0.9em"><span style="color:#608b4e">// IsNotFoundError checks if given error is NotFound error</span>
+<span style="color:#569cd6">func</span> <span style="color:#dcdcaa">IsNotFoundError</span>(err <span
+            style="color:#569cd6">error</span>) <span style="color:#4ec9b0">bool</span> {
+    <span style="color:#9cdcfe">nfe</span>, <span style="color:#9cdcfe">ok</span> := err.(<span style="color:#569cd6">interface</span> {
+        <span style="color:#dcdcaa">NotFound</span>() <span style="color:#4ec9b0">bool</span>
+    })
+
+    <span style="color:#c586c0">return</span> ok &amp;&amp; nfe.<span style="color:#dcdcaa">NotFound</span>()
+}
+
+
+<span style="color:#608b4e">// IsAlreadyExistsError checks if given error is AlreadyExist error</span>
+<span style="color:#569cd6">func</span> <span style="color:#dcdcaa">IsAlreadyExistsError</span>(err <span
+            style="color:#569cd6">error</span>) <span style="color:#4ec9b0">bool</span> {
+    <span style="color:#9cdcfe">aee</span>, <span style="color:#9cdcfe">ok</span> := err.(<span style="color:#569cd6">interface</span> {
+        <span style="color:#dcdcaa">AlreadyExists</span>() <span style="color:#4ec9b0">bool</span>
+    })
+
+    <span style="color:#c586c0">return</span> ok &amp;&amp; aee.<span style="color:#dcdcaa">AlreadyExists</span>()
+}
+
+</span></pre>
+
+                        <p> </p>
+                    </div>
+                </div>
+            </section>
+        </section>
+        <!-- / Assert errors for behaviour, not type-->
+
+        <!-- ERR CONTEXT -->
+        <section class="stack">
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 160px; top: 313px;">
+                    <div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text"
+                         style="z-index: 11;">
+                        <h2>Error Context</h2>
+                    </div>
+                </div>
+
+
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 2px;">
+                    <div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text"
+                         style="z-index: 11;">
+                        <h2>Error Context</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="width: 785px; height: 504px; left: -26px; top: 36px;">
+                    <div class="sl-block-content" style="z-index: 12;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 742px; left: 38px; top: 144px;">
+                    <div class="sl-block-content" style="z-index: 13; font-size: 49%;">
+<pre><span style="font-size:0.9em"><span style="color:#569cd6">func</span> (c *Controller) <span style="color:#dcdcaa">processItem</span>(key <span
+        style="color:#4ec9b0">string</span>) <span style="color:#569cd6">error</span> {
+    <span style="color:#9cdcfe">obj</span>, <span style="color:#9cdcfe">exists</span>, <span
+            style="color:#9cdcfe">err</span> := c.informer.<span style="color:#dcdcaa">Informer</span>().<span
+            style="color:#dcdcaa">GetIndexer</span>().<span style="color:#dcdcaa">GetByKey</span>(key)
+    <span style="color:#c586c0">if</span> err != <span style="color:#569cd6">nil</span> {
+        <span style="color:#c586c0">return</span> err
+    }
+
+    <span style="color:#c586c0">if</span> !exists {
+        <span style="color:#c586c0">if</span> <span style="color:#9cdcfe">err</span> := c.reRemover.<span
+            style="color:#dcdcaa">Remove</span>(internal.<span style="color:#dcdcaa">RemoteEnvironmentName</span>(key)); err != <span
+            style="color:#569cd6">nil</span> {
+            <span style="color:#c586c0">return</span> err
+        }
+        <span style="color:#c586c0">return</span> <span style="color:#569cd6">nil</span>
+    }
+
+    <span style="color:#9cdcfe">replaced</span>, <span style="color:#9cdcfe">err</span> := c.reUpserter.<span
+            style="color:#dcdcaa">Upsert</span>(dm)
+    <span style="color:#c586c0">if</span> err != <span style="color:#569cd6">nil</span> {
+        <span style="color:#c586c0">return</span> err
+    }
+
+    <span style="color:#c586c0">return</span> <span style="color:#569cd6">nil</span>
+}</span></pre>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 742px; left: 255px; top: 576px;">
+                    <div class="sl-block-content" style="z-index: 14; font-size: 49%;">
+<pre><span style="color:#c586c0">if</span> <span style="color:#9cdcfe">err</span> := <span style="color:#dcdcaa">processItem</span>(key); err != <span
+        style="color:#569cd6">nil</span> {
+    log.<span style="color:#dcdcaa">Errorf</span>(<span style="color:#ce9178">"Error processing %q: %v"</span>, key, err)
+    <span style="color:#c586c0">return</span>
+}</pre>
+
+                        <p> </p>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="width: 806px; height: 274px; left: 171px; top: 471px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4648040/carbon__10_.png">
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 721px; height: 463px; left: -23px; top: 126px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; min-width: 30px; min-height: 30px; width: 650px; left: 31px; top: 233px;">
+                    <div class="sl-block-content" style="z-index: 12; font-size: 67%;" dir="ui">
+<pre><span style="font-size:0.9em">{
+<span style="color:#9cdcfe">  "level"</span>: <span style="color:#ce9178">"error"</span>,
+<span style="color:#9cdcfe">  "log"</span>: {
+<span style="color:#9cdcfe">     "message"</span>: <span style="color:#ce9178">"Error processing 'ns/re1': no 
+                 reachable servers"</span>,
+  }
+}</span></pre>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style="min-width: 30px; min-height: 30px; width: 285px; height: 545px; left: 673px; top: 97px;">
+                    <div class="sl-block-content" style="z-index: 13;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647705/dee.jpg">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text" style=" height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 179px; top: 2px;
+        ">
+                    <div class="sl-block-content" style="z-index: 14;">
+                        <h2>Error Context</h2>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="image"
+                     style="width: 935px; height: 600px; left: 12px; top: 113px;">
+                    <div class="sl-block-content" style="z-index: 10;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4647981/carbon__9_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 813px; left: 80px; top: 288px;">
+                    <div class="sl-block-content" style="z-index: 11; font-size: 67%;" dir="ui">
+<pre><span style="color:#608b4e">// https://github.com/pkg/errors
+
+
+</span>
+<span style="color:#9cdcfe">err</span> := c.reRemover.<span style="color:#dcdcaa">Remove</span>(internal.<span
+            style="color:#dcdcaa">RemoteEnvironmentName</span>(key))
+<span style="color:#c586c0">if</span> err != <span style="color:#569cd6">nil</span> {
+  <span style="color:#c586c0">return</span> errors.<span style="color:#dcdcaa">Wrapf</span>(err, <span
+            style="color:#ce9178">"while removing RE with name %q from storage"</span>, key)
+}</pre>
+                    </div>
+                </div>
+
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 179px; top: 2px;">
+                    <div class="sl-block-content" style="z-index: 13;">
+                        <h2>Error Context</h2>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div class="sl-block" data-block-type="text"
+                     style="height: auto; width: 881px; left: 64px; top: 144px;">
+                    <div class="sl-block-content" style="z-index: 12; font-size: 67%;" dir="ui">
+<pre><span style="font-size:0.9em">{
+<span style="color:#9cdcfe">  "level"</span>: <span style="color:#ce9178">"error"</span>,
+<span style="color:#9cdcfe">  "log"</span>: {
+<span style="color:#9cdcfe">     "message"</span>: <span style="color:#ce9178">"Error processing 'ns/re1': while removing remote environment  
+                 with name 're1' from storage: while connecting to database: </span></span><span
+        style="font-size:0.9em"><span style="color:rgb(206, 145, 120)">no
+                 reachable server</span></span><span style="font-size:0.9em"><span style="color:#ce9178">"</span>,
+  }
+}</span></pre>
+                    </div>
+                </div>
+
+                <div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 179px; top: 2px;">
+                    <div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text"
+                         style="z-index: 13;">
+                        <h2>Error Context</h2>
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style=" min-width: 30px; min-height: 30px; width: 999px; height: 360px; left: -19px; top: 45px;">
+                    <div class="sl-block-content" style="z-index: 11;">
+                        <img data-src="https://s3.amazonaws.com/media-p.slid.es/uploads/837583/images/4651554/carbon__11_.png">
+                    </div>
+                </div>
+                <div class="sl-block" data-block-type="image"
+                     style=" min-width: 30px; min-height: 30px; width: 411px; height: 308px; left: 275px; top: 374px;">
+                    <div class="sl-block-content" style="z-index: 14;">
+                        <img data-src="https://media.giphy.com/media/XreQmk7ETCak0/giphy.gif">
+                    </div>
+                </div>
+            </section>
+        </section>
+        <!-- / ERR CONTEXT -->
+
+        <!-- Q&A -->
+        <section>
+            <div class="sl-block" data-block-type="text"
+                 style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 172px; top: 323px;">
+                <div class="sl-block-content" style="z-index: 12; color: rgb(230, 145, 56);">
+                    <h2>Q&amp;A</h2>
+                </div>
+            </div>
+        </section>
+        <!-- / Q&A -->
+
+        <!-- THANK-->
+        <section>
+            <div class="sl-block" data-block-type="text"
+                 style="height: auto; min-width: 30px; min-height: 30px; width: 600px; left: 159px; top: 297px;">
+                <div class="sl-block-content" style="z-index: 11;">
+                    <h2>Thank you</h2>
+                </div>
+            </div>
+        </section>
+        <!-- / THANK-->
+
+    </div>
+</div>
+
+<script>
+    var SLConfig = {
+        "deck": {
+            "width": 960,
+            "height": 720,
+            "visibility": "all",
+            "sanitize_messages": null,
+            "view_count": 0,
+            "background_transition": "slide",
+            "transition": "slide",
+            "theme_font": "montserrat",
+            "theme_color": "black-orange",
+            "auto_slide_interval": 0,
+            "rolling_links": false,
+            "center": false,
+            "should_loop": false,
+            "share_notes": false,
+            "slide_number": false,
+            "rtl": false,
+            "version": 2,
+            "font_typekit": null,
+            "font_google": null,
+            "notes": {}
+        },
+    };
+</script>
+
+<script src="script.js"></script>
+
+<script>
+    Reveal.initialize({
+        width: SLConfig.deck.width,
+        height: SLConfig.deck.height,
+        margin: 0.05,
+
+        controls: true,
+        progress: true,
+        history: true,
+        mouseWheel: false,
+        showNotes: SLConfig.deck.share_notes ? 'separate-page' : false,
+        slideNumber: SLConfig.deck.slide_number,
+
+        autoSlide: SLConfig.deck.auto_slide_interval || 0,
+        autoSlideStoppable: true,
+
+        rollingLinks: false,
+        center: SLConfig.deck.center || false,
+        loop: SLConfig.deck.should_loop || false,
+        rtl: SLConfig.deck.rtl || false,
+
+        transition: SLConfig.deck.transition,
+        backgroundTransition: SLConfig.deck.background_transition,
+
+        pdfMaxPagesPerSlide: 1
+    });
+
+    if (window.hljs) hljs.initHighlightingOnLoad();
+</script>
+
+
+</body>
+</html>
