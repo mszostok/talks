@@ -1,4 +1,4 @@
-# <img src="https://golang.org/doc/gopher/pencil/gophermega.jpg" alt="alt text" width="70px" height="70px"> talks
+# <img src="https://d33wubrfki0l68.cloudfront.net/6f2451fb9a9ab5fd22fe904b9205b3cb04d9671e/ab021/images/member/gopher.png" alt="alt text" width="70px" height="70px"> talks
 This is the table of contents for the presentations in `talks` repository.
 
 #### 2017
