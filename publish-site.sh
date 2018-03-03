@@ -49,7 +49,7 @@ function copyTalksDirs {
 
 function commitPublicDir {
     echo -e "${INVERTED}Updating gh-pages branch${NC}"
-    cd  ${ROOT_PATH}/public && git add --all && git commit -m "Publishing to gh-pages (publish-site.sh)" && git push origin gh-pages
+    cd  ${ROOT_PATH}/public && git add --all && git commit -m "auto-commit (publish-site.sh): Update gh-pages" && git push origin gh-pages
     echo -e "${GREEN}OK\n${NC}"
 }
 
