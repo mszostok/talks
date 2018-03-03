@@ -1,0 +1,6 @@
+<header class="row text-center header">
+  {{ with .Site.Params.authorimage }} <img src="/img/{{ . }}" alt="Author Image" class="img-circle text-center headshot"> {{ end }}
+  <h1 class="author">{{ .Site.Params.author }}</h1>
+  <div id="avatar" ></div>
+  {{ with .Site.Params.authorimage }} <img src="/img/{{ . }}"  class="avatar"></div> {{ end }}
+</header>

@@ -1,0 +1,12 @@
+<div class="profile">
+    <section id="wrapper">
+        <header id="header">
+            <!-- {{ with .Site.Params.authorimage }} <img src="/img/{{ . }}"  class="avatar"></div> {{ end }} -->
+            <a href='{{ with .Site.Params.avatarLink }}{{ . }}{{ else }}{{ .Site.BaseURL }}about{{ end }}'>
+                <img id="avatar" src="{{ .Site.BaseURL }}img/headshot.jpg"/>
+            </a>
+            <h1>{{ .Site.Title }}</h1>
+            {{ with .Site.Params.bio }}<h2>{{ . | markdownify }}</h2>{{ end }}
+        </header>
+    </section>
+</div>
