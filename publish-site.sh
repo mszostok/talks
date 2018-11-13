@@ -9,6 +9,11 @@ NC='\033[0m' # No Color
 
 ROOT_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
+function setupGit() {
+  git config --global user.email "travis@travis-ci.org"
+  git config --global user.name "Travis CI"
+}
+
 function checkIfAllChangesAreCommited {
     if [[ $(git status -s) ]]
     then
