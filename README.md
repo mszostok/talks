@@ -7,3 +7,4 @@ This is the table of contents for the presentations in `talks` repository.
 #### 2018
 
 * **Errors in Go - let's do it right**  ([sources](./2018/2018/go-basic-error-handling/))  ([presentation](https://mszostok.github.io/talks/2018/go-basic-error-handling/))
+* **+101 ways to extend the Kubernetes platform**  ([presentation](https://mszostok.github.io/talks/2018/101-ways-to-extend-k8s/extends-k8s.pdf))
