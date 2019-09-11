@@ -45,6 +45,7 @@ function regenerateSite {
 function copyTalksDirs {
     cp -r 2017/ public/2017
     cp -r 2018/ public/2018
+    cp -r 2019/ public/2019
 }
 
 function commitPublicDir {

@@ -5,12 +5,16 @@ This is the table of contents for the presentations in `talks` repository.
 
 * **Functional options - where user-friendly API begins**, _[Go & Cloud Native Meetup](https://www.meetup.com/GophersSilesia/)_ event (**[slides](https://mszostok.github.io/talks/2017/functionall-opts/Functional_options_where_user-friendly_API_begins.pdf)**)
 
-#### 2018/2019
+#### 2018
 
 * **Errors in Go - let's do it right**, _[Go & Cloud Native Meetup](https://www.meetup.com/GophersSilesia/)_ event (**[slides](https://mszostok.github.io/talks/2018/go-basic-error-handling/)**)
 
-* **+101 ways to extend the Kubernetes platform**, _Diving into the cloud_ event (**[slides](https://mszostok.github.io/talks/2018/101-ways-to-extend-k8s/extends-k8s.pdf)**)
+* **Service Mesh in microservice world**, lecture at Silesian University of Technology (**[slides](https://mszostok.github.io/talks/2018/service-mesh/service_mesh.pdf)**)
 
-* **Cloud Native approach with Kyma**, devstyle LIVE webinar (**[slides](https://mszostok.github.io/talks/2018/cloud-native-approach-with-Kyma/cloudnative_by_kyma.pdf)**, **[recording [PL]](https://youtu.be/eX2AAnvtjuI)**)
+### 2019
 
-* **Service Mesh in microservice world**, lecture at Silesian University of Technology (**[slides](https://mszostok.github.io/talks/2018/service-mesh/service-mesh.pdf)**)
+* **Cloud Native approach with Kyma**, devstyle LIVE webinar (**[slides](https://mszostok.github.io/talks/2019/cloud-native-approach-with-Kyma/cloudnative_by_kyma.pdf)**, **[recording [PL]](https://youtu.be/eX2AAnvtjuI)**)
+
+* **+101 ways to extend the Kubernetes platform**, _Diving into the cloud_ event (**[slides](https://mszostok.github.io/talks/2019/101-ways-to-extend-k8s/extends-k8s.pdf)**)
+
+* **How to migrate the Aggregated API Server to the  Custom Resource Definition (CRD)**, _[Cloud Native Warsaw](http://cloudnativewarsaw.com/)_ event (**slides: [pptx](https://mszostok.github.io/talks/2019/migrate-api-server-to-crds/migrate_api_server_to_crds.pptx)** or **[Google slides](https://docs.google.com/presentation/d/1kX3KYmefr0H_aqIz1L0GKo13xOxl_PGgf4o8yM1Pdd4/edit?usp=sharing)**)
