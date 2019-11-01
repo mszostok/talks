@@ -17,4 +17,4 @@ This is the table of contents for the presentations in `talks` repository.
 
 * **+101 ways to extend the Kubernetes platform**, _Diving into the cloud_ event (**[slides](https://mszostok.github.io/talks/2019/101-ways-to-extend-k8s/extends-k8s.pdf)**)
 
-* **How to migrate the Aggregated API Server to the  Custom Resource Definition (CRD)**, _[Cloud Native Warsaw](http://cloudnativewarsaw.com/)_ event (**slides: [pptx](https://mszostok.github.io/talks/2019/migrate-api-server-to-crds/migrate_api_server_to_crds.pptx)** or **[Google slides](https://docs.google.com/presentation/d/1kX3KYmefr0H_aqIz1L0GKo13xOxl_PGgf4o8yM1Pdd4/edit?usp=sharing)**)
+* **How to migrate the Aggregated API Server to the  Custom Resource Definition (CRD)**, _[Cloud Native Warsaw](http://cloudnativewarsaw.com/)_ event (**[recoding](https://youtu.be/KZBaGETkfC0)**, **slides: [pptx](https://mszostok.github.io/talks/2019/migrate-api-server-to-crds/migrate_api_server_to_crds.pptx)** or **[Google slides](https://docs.google.com/presentation/d/1kX3KYmefr0H_aqIz1L0GKo13xOxl_PGgf4o8yM1Pdd4/edit?usp=sharing)**)
