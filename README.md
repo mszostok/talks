@@ -23,4 +23,4 @@ This is the table of contents for the presentations in `talks` repository.
 
 #### 2026
 
-* **Beyond Utilization: Pressure-aware vertical autoscaling**, _[Cloud Native Days Poland](https://cloudnativedayspoland.org/)_ event
+* **Beyond Utilization: Pressure-aware vertical autoscaling**, _[Cloud Native Days Poland 2026](https://cloudnativedayspoland.org/)_ event, Warsaw (22 October 2026)
