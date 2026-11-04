@@ -20,3 +20,7 @@ This is the table of contents for the presentations in `talks` repository.
 * **How to migrate the Aggregated API Server to the  Custom Resource Definition (CRD)**, _[Cloud Native Warsaw](http://cloudnativewarsaw.com/)_ event (**[recoding](https://youtu.be/KZBaGETkfC0)**, **slides: [pptx](https://mszostok.github.io/talks/2019/migrate-api-server-to-crds/migrate_api_server_to_crds.pptx)** or **[Google slides](https://docs.google.com/presentation/d/1kvWRxTQi_05wgO1UeBxOsri40YjP04oEO5g20zQ5YlU/edit?usp=sharing)**)
 
 * **SIG Service Catalog Deep-Dive**, _[KubeCon + CloudNativeCon North America](https://sched.co/UagL)_ (**[slides](https://static.sched.com/hosted_files/kccncna19/74/Service%20Catalog%20Deep%20Dive.pdf)**)
+
+#### 2026
+
+* **Beyond Utilization: Pressure-aware vertical autoscaling**, _[Cloud Native Days Poland](https://cloudnativedayspoland.org/)_ event
